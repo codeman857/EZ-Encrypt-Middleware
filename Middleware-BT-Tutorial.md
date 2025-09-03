@@ -18,8 +18,10 @@ nano ~/.bashrc
 
 # 在 ~/.bashrc 文件末尾增加 如下一行内容
 export PATH=$PATH:/usr/local/go/bin
-
 # 保存并退出：在 nano 中，按 Ctrl+X，然后按 Y，再按 Enter
+
+# 让配置生效
+source ~/.bashrc
 ```
 
 ### 检查是否安装成功
