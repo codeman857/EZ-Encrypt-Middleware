@@ -53,34 +53,34 @@ ls
 ### 2. 修改 /root/EZ-Encrypt-Middleware/ 下的 .env 文件配置
 
 ```bash
-#查看 VPS 端口占用情况
+# 查看 VPS 端口占用情况
 ss -tulpn
 
-#找一个未被占用的端口号，这里我以 3939 为例 (九宫格 "e" "z" 对应数字 "3" 和 "9")
+# 找一个未被占用的端口号，这里我以 3939 为例 (九宫格 "e" "z" 对应数字 "3" 和 "9")
 nano .env
 ```
 
 ```bash
-#1.基础服务器设置
-PORT=3939                                  #服务器监听端口
-BACKEND_API_URL=https://api.xxx.com #后端真实 API 根地址 不带 /api/v1（无尾斜杠）
+# 1. 基础服务器设置
+PORT=3939                                  # 服务器监听端口
+BACKEND_API_URL=https://api.xxx.com        # 后端真实 API 根地址 不带 /api/v1（无尾斜杠）
 
-#2.CORS / 安全设置
-CORS_ORIGIN=*                              #允许的 CORS 源；* 表示全部
-ALLOWED_ORIGINS=*                          #请求来源白名单，逗号分隔或 * 通配
-REQUEST_TIMEOUT=30000                      #请求超时(ms)
-ENABLE_LOGGING=false                       #是否输出请求日志
-DEBUG_MODE=false                           #是否输出调试日志
+# 2. CORS / 安全设置
+CORS_ORIGIN=*                              # 允许的 CORS 源；* 表示全部
+ALLOWED_ORIGINS=*                          # 请求来源白名单，逗号分隔或 * 通配
+REQUEST_TIMEOUT=30000                      # 请求超时(ms)
+ENABLE_LOGGING=false                       # 是否输出请求日志
+DEBUG_MODE=false                           # 是否输出调试日志
 
-#3.支付回调免验证路径
-#多条用英文逗号分隔，须写完整路径（含前缀）
-#例如: /api/v1/guest/payment/notify/EPay/12345, /api/v1/guest/payment/notify/Alipay/ABC123
+# 3. 支付回调免验证路径
+# 多条用英文逗号分隔，须写完整路径（含前缀）
+# 例如: /api/v1/guest/payment/notify/EPay/12345, /api/v1/guest/payment/notify/Alipay/ABC123
 ALLOWED_PAYMENT_NOTIFY_PATHS=
 
-#5.AES 加解密配置
-#中间件加密 KEY 必须是 16 位的 16 进制字符串
-#必须和 EZ 前端配置文件 /src/config/index.js 中的 API_MIDDLEWARE_KEY 保持一致
-#在线生成地址 https://www.bejson.com/math/hex_gen/
+# 4. AES 加解密配置
+# 中间件加密 KEY 必须是 16 位的 16 进制字符串
+# 必须和 EZ 前端配置文件 /src/config/index.js 中的 API_MIDDLEWARE_KEY 保持一致
+# 在线生成地址 https://www.bejson.com/math/hex_gen/
 AES_KEY=4c6f8e5f9467dc71
 ```
 
