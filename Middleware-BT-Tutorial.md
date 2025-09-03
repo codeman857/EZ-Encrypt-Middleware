@@ -50,6 +50,9 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ez-api
 
 # 执行 ls 命令查看是否生成了 ez-api 二进制文件
 ls
+
+#赋予二进制文件执行权限
+chmod 777 /root/EZ-Encrypt-Middleware/ez-api
 ```
 
 ### 2. 修改 /root/EZ-Encrypt-Middleware/ 下的 .env 文件配置
