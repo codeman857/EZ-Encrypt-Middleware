@@ -9,12 +9,16 @@
 ```bash
 # 下载安装包 以 AMD 架构为例
 wget https://go.dev/dl/go1.24.0.linux-amd64.tar.gz
+
 # 解压到 /usr/local
 tar -C /usr/local -xzf go1.24.0.linux-amd64.tar.gz
+
 # 配置环境变量，编辑 ~/.bashrc 文件
 nano ~/.bashrc
+
 # 在 ~/.bashrc 文件末尾增加 如下一行内容
 export PATH=$PATH:/usr/local/go/bin
+
 # 保存并退出：在 nano 中，按 Ctrl+X，然后按 Y，再按 Enter
 ```
 
@@ -23,6 +27,7 @@ export PATH=$PATH:/usr/local/go/bin
 ```bash
 # 执行检查 go 版本命令
 go version
+
 # 如果一切顺利 应该会看到类似以下内容的输出
 go version go1.24.0 linux/amd64
 ```
@@ -34,10 +39,13 @@ go version go1.24.0 linux/amd64
 ```bash
 # 下载 R 佬的中间件源码
 git clone https://github.com/codeman857/EZ-Encrypt-Middleware.git
+
 # 切换到中间件目录
 cd EZ-Encrypt-Middleware/
+
 # 执行 go 语言编译命令 以 "ez-api" 命名编译好的二进制文件
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ez-api
+
 # 执行 ls 命令查看是否生成了 ez-api 二进制文件
 ls
 ```
@@ -47,6 +55,7 @@ ls
 ```bash
 #查看 VPS 端口占用情况
 ss -tulpn
+
 #找一个未被占用的端口号，这里我以 3939 为例 (九宫格 "e" "z" 对应数字 "3" 和 "9")
 nano .env
 ```
@@ -82,10 +91,13 @@ AES_KEY=4c6f8e5f9467dc71
 ```bash
 # Name
 ez-api
+
 # Run User
 root
+
 # Process directory
 /root/EZ-Encrypt-Middleware/
+
 # Start command
 /root/EZ-Encrypt-Middleware/ez-api
 ```
@@ -116,6 +128,7 @@ http://127.0.0.1:3939
 ```bash
 # API_MIDDLEWARE_URL
 https://ez.api
+
 # API_MIDDLEWARE_KEY
 4c6f8e5f9467dc71
 ```
