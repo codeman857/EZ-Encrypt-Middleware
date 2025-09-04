@@ -1,4 +1,4 @@
-module testjiami
+module EZ-Encrypt-Middleware
 
 go 1.24
 

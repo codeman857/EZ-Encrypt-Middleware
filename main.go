@@ -1,12 +1,12 @@
 package main
 
 import (
+	"EZ-Encrypt-Middleware/config"
+	"EZ-Encrypt-Middleware/proxy"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"testjiami/config"
-	"testjiami/proxy"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -25,14 +25,42 @@ func main() {
 	// Create Gin engine
 	r := gin.Default()
 
-	r.NoRoute(func(c *gin.Context) {
-		if config.AppConfig.IsPaymentNotifyPath(c.Request.URL.Path) {
-			handlePaymentNotify(c)
-			return
-		}
+	// Check if path prefix is configured
+	pathPrefix := config.AppConfig.PathPrefix
 
-		proxy.ProxyHandler(c)
-	})
+	if pathPrefix != "" {
+		// If path prefix is configured, only handle paths that match the prefix
+		r.NoRoute(func(c *gin.Context) {
+			requestPath := c.Request.URL.Path
+
+			// Check if request path starts with the configured prefix
+			if len(requestPath) >= len(pathPrefix) && requestPath[:len(pathPrefix)] == pathPrefix {
+				// Remove prefix from path for further processing
+				c.Request.URL.Path = requestPath[len(pathPrefix):]
+
+				if config.AppConfig.IsPaymentNotifyPath(c.Request.URL.Path) {
+					handlePaymentNotify(c)
+					return
+				}
+
+				proxy.ProxyHandler(c)
+				return
+			}
+
+			// If path doesn't match prefix, return 404
+			c.JSON(http.StatusNotFound, gin.H{"error": "路径未找到"})
+		})
+	} else {
+		// If no prefix is configured, keep the original behavior
+		r.NoRoute(func(c *gin.Context) {
+			if config.AppConfig.IsPaymentNotifyPath(c.Request.URL.Path) {
+				handlePaymentNotify(c)
+				return
+			}
+
+			proxy.ProxyHandler(c)
+		})
+	}
 
 	corsConfig := cors.Config{}
 
@@ -55,7 +83,6 @@ func main() {
 		}
 	}
 
-	// Add request logging middleware if enabled
 	if config.AppConfig.EnableLogging == "true" {
 		r.Use(func(c *gin.Context) {
 			log.Printf("请求: %s %s", c.Request.Method, c.Request.URL.Path)
@@ -87,28 +114,25 @@ func main() {
 	if len(config.AppConfig.GetAllowedPaymentNotifyPaths()) > 0 {
 		log.Printf("支付回调路径: %v", config.AppConfig.GetAllowedPaymentNotifyPaths())
 	}
+	if config.AppConfig.PathPrefix != "" {
+		log.Printf("路径前缀: %s", config.AppConfig.PathPrefix)
+	}
 	r.Run(":" + port)
 }
 
-// handlePaymentNotify handles payment notification paths directly without encryption
 func handlePaymentNotify(c *gin.Context) {
-	// Get backend URL from config
 	backendURL := config.AppConfig.BackendAPIURL
 
-	// Create target URL
 	targetURL := backendURL + c.Request.URL.Path
 
-	// Parse the target URL
 	target, err := url.Parse(targetURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "无效的目标URL"})
 		return
 	}
 
-	// Create reverse proxy
 	proxy := httputil.NewSingleHostReverseProxy(target)
 
-	// Director function to modify the request
 	proxy.Director = func(req *http.Request) {
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
@@ -117,6 +141,5 @@ func handlePaymentNotify(c *gin.Context) {
 		req.Host = target.Host
 	}
 
-	// Serve the request
 	proxy.ServeHTTP(c.Writer, c.Request)
 }

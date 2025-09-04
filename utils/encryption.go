@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"testjiami/config"
+	"EZ-Encrypt-Middleware/config"
 
 	"github.com/deatil/go-cryptobin/cryptobin/crypto"
 )

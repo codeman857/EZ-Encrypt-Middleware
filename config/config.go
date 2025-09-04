@@ -18,6 +18,7 @@ type Config struct {
 	EnableLogging             string
 	DebugMode                 string
 	AllowedPaymentNotifyPaths string
+	PathPrefix                string
 }
 
 var AppConfig *Config
@@ -38,6 +39,7 @@ func LoadConfig() {
 		EnableLogging:             getEnv("ENABLE_LOGGING", "false"),
 		DebugMode:                 getEnv("DEBUG_MODE", "false"),
 		AllowedPaymentNotifyPaths: getEnv("ALLOWED_PAYMENT_NOTIFY_PATHS", ""),
+		PathPrefix:                getEnv("PATH_PREFIX", ""),
 	}
 
 	if AppConfig.BackendAPIURL == "" {

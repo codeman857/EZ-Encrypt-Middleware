@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"EZ-Encrypt-Middleware/config"
+	"EZ-Encrypt-Middleware/utils"
 	"context"
 	"encoding/base64"
 	"net"
@@ -8,8 +10,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
-	"testjiami/config"
-	"testjiami/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
