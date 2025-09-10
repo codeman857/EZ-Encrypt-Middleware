@@ -95,7 +95,9 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o proxy-server // amd64
 go run main.go
 ```
 
-## 使用说明
+## 使用说明 
+
+宝塔搭建请访问 [Middleware-BT-Tutorial.md](Middleware-BT-Tutorial.md)
 
 ### 1. 加密路径请求
 
