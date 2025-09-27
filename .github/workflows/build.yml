@@ -166,61 +166,56 @@ jobs:
         rm -rf release
         mkdir -p release
         
-        # 复制文件到release目录
+        # 复制通用文件
         cp README.md release/
         cp .env release/
         
-        # 根据架构选择复制相应的二进制文件
-        if [ -f "proxy-server-arm64" ]; then
-          cp proxy-server-arm64 release/
-        fi
-        if [ -f "proxy-server-amd64" ]; then
-          cp proxy-server-amd64 release/
-        fi
-        if [ -f "proxy-server-windows-amd64.exe" ]; then
-          cp proxy-server-windows-amd64.exe release/
-        fi
-        if [ -f "proxy-server-darwin-amd64" ]; then
-          cp proxy-server-darwin-amd64 release/
-        fi
-        if [ -f "proxy-server-darwin-arm64" ]; then
-          cp proxy-server-darwin-arm64 release/
+        # 创建压缩包函数
+        create_archive() {
+          local platform=$1
+          local binary=$2
+          local archive_name=$3
+          
+          if [ -f "$binary" ]; then
+            echo "Creating archive for $platform..."
+            cp "$binary" release/
+            cd release
+            
+            if [[ "$archive_name" == *.zip ]]; then
+              zip "$archive_name" "$binary" README.md .env
+            else
+              tar -czf "$archive_name" "$binary" README.md .env
+            fi
+            
+            cd ..
+            mv "release/$archive_name" .
+            echo "Created: $archive_name"
+          else
+            echo "Binary $binary not found, skipping $platform"
+          fi
+        }
+        
+        # 根据架构选择创建相应的压缩包
+        ARCHITECTURE="${{ github.event.inputs.ARCHITECTURE || 'all' }}"
+        
+        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "arm64" ]; then
+          create_archive "Linux ARM64" "proxy-server-arm64" "EZ-Encrypt-Middleware-linux-arm64.tar.gz"
+          create_archive "macOS ARM64" "proxy-server-darwin-arm64" "EZ-Encrypt-Middleware-darwin-arm64.tar.gz"
         fi
         
-        # 创建压缩包
-        cd release
-        
-        # Linux ARM64
-        if [ -f "proxy-server-arm64" ]; then
-          tar -czf ../EZ-Encrypt-Middleware-linux-arm64.tar.gz proxy-server-arm64 README.md .env
+        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
+          create_archive "Linux AMD64" "proxy-server-amd64" "EZ-Encrypt-Middleware-linux-amd64.tar.gz"
+          create_archive "Windows AMD64" "proxy-server-windows-amd64.exe" "EZ-Encrypt-Middleware-windows-amd64.zip"
+          create_archive "macOS AMD64" "proxy-server-darwin-amd64" "EZ-Encrypt-Middleware-darwin-amd64.tar.gz"
         fi
         
-        # Linux AMD64
-        if [ -f "proxy-server-amd64" ]; then
-          tar -czf ../EZ-Encrypt-Middleware-linux-amd64.tar.gz proxy-server-amd64 README.md .env
-        fi
-        
-        # Windows AMD64
-        if [ -f "proxy-server-windows-amd64.exe" ]; then
-          zip ../EZ-Encrypt-Middleware-windows-amd64.zip proxy-server-windows-amd64.exe README.md .env
-        fi
-        
-        # macOS AMD64
-        if [ -f "proxy-server-darwin-amd64" ]; then
-          tar -czf ../EZ-Encrypt-Middleware-darwin-amd64.tar.gz proxy-server-darwin-amd64 README.md .env
-        fi
-        
-        # macOS ARM64
-        if [ -f "proxy-server-darwin-arm64" ]; then
-          tar -czf ../EZ-Encrypt-Middleware-darwin-arm64.tar.gz proxy-server-darwin-arm64 README.md .env
-        fi
-        
-        # 移动压缩包到release目录
-        mv ../EZ-Encrypt-Middleware-*.tar.gz ../EZ-Encrypt-Middleware-*.zip . 2>/dev/null || true
+        # 移动所有压缩包到release目录
+        mkdir -p release
+        mv EZ-Encrypt-Middleware-*.tar.gz EZ-Encrypt-Middleware-*.zip release/ 2>/dev/null || true
         
         # 显示创建的文件
-        echo "Created archives:"
-        ls -la *.tar.gz *.zip 2>/dev/null || echo "No archives created"
+        echo "Final archives:"
+        ls -la release/*.tar.gz release/*.zip 2>/dev/null || echo "No archives created"
         
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
