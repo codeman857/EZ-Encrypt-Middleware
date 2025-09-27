@@ -48,16 +48,13 @@ on:
         required: false
         default: '30000'
         type: string
+      ALLOWED_PAYMENT_NOTIFY_PATHS:
+        description: '支付回调免验证路径'
+        required: false
+        default: ''
+        type: string
       ENABLE_LOGGING:
         description: '是否启用日志'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
-      DEBUG_MODE:
-        description: '是否启用调试模式'
         required: false
         default: 'false'
         type: choice
@@ -77,9 +74,9 @@ jobs:
       CORS_ORIGIN: ${{ github.event.inputs.CORS_ORIGIN || secrets.CORS_ORIGIN || '*' }}
       ALLOWED_ORIGINS: ${{ github.event.inputs.ALLOWED_ORIGINS || secrets.ALLOWED_ORIGINS || '*' }}
       REQUEST_TIMEOUT: ${{ github.event.inputs.REQUEST_TIMEOUT || secrets.REQUEST_TIMEOUT || '30000' }}
+      ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ github.event.inputs.ALLOWED_PAYMENT_NOTIFY_PATHS || secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
       ENABLE_LOGGING: ${{ github.event.inputs.ENABLE_LOGGING || secrets.ENABLE_LOGGING || 'false' }}
-      DEBUG_MODE: ${{ github.event.inputs.DEBUG_MODE || secrets.DEBUG_MODE || 'false' }}
-      ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
+      DEBUG_MODE: ${{ secrets.DEBUG_MODE || 'false' }}
       AES_KEY: ${{ github.event.inputs.AES_KEY || secrets.AES_KEY || '4c6f8e5f9467dc71' }}
     
     steps:

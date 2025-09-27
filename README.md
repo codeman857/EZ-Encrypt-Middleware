@@ -152,10 +152,10 @@ go run main.go
 - **CORS_ORIGIN**: CORS源（默认: *）
 - **ALLOWED_ORIGINS**: 允许的来源（默认: *）
 - **REQUEST_TIMEOUT**: 请求超时毫秒数（默认: 30000）
+- **ALLOWED_PAYMENT_NOTIFY_PATHS**: 支付回调免验证路径（默认: 空）
 - **ENABLE_LOGGING**: 是否启用日志（默认: false）
-- **DEBUG_MODE**: 是否启用调试模式（默认: false）
 
-> **注意**: `ALLOWED_PAYMENT_NOTIFY_PATHS` 参数已移除，如需配置请使用GitHub Secrets。
+> **注意**: `DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
 
 #### 方式2: 使用GitHub Secrets设置默认值
 
