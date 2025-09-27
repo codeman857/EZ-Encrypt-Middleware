@@ -81,8 +81,8 @@ AES_KEY=4c6f8e5f9467dc71
 
 从 [Releases](https://github.com/codeman857/EZ-Encrypt-Middleware/releases) 页面下载对应平台的预编译版本：
 
-- **Linux ARM64**: `EZ-Encrypt-Middleware-linux-arm64.tar.gz`
-- **Linux AMD64**: `EZ-Encrypt-Middleware-linux-amd64.tar.gz`
+- **Linux ARM64**: `EZ-Encrypt-Middleware-linux-arm64.zip`
+- **Linux AMD64**: `EZ-Encrypt-Middleware-linux-amd64.zip`
 
 下载后解压，压缩包中已包含配置好的 `.env` 文件，可直接运行：
 

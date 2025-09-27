@@ -130,7 +130,6 @@ jobs:
       run: |
         # 清理环境
         rm -rf release
-        rm -f EZ-Encrypt-Middleware-*.tar.gz
         mkdir -p release
         
         # 显示当前目录内容
@@ -140,11 +139,13 @@ jobs:
         # 创建Linux ARM64压缩包
         if [ -f "proxy-server-arm64" ]; then
           echo "Creating Linux ARM64 archive..."
-          tar -czf release/EZ-Encrypt-Middleware-linux-arm64.tar.gz \
-            proxy-server-arm64 \
-            README.md \
-            .env
-          echo "Created: EZ-Encrypt-Middleware-linux-arm64.tar.gz"
+          cd release
+          zip -r EZ-Encrypt-Middleware-linux-arm64.zip \
+            ../proxy-server-arm64 \
+            ../README.md \
+            ../.env
+          cd ..
+          echo "Created: EZ-Encrypt-Middleware-linux-arm64.zip"
         else
           echo "Warning: proxy-server-arm64 not found"
         fi
@@ -152,11 +153,13 @@ jobs:
         # 创建Linux AMD64压缩包
         if [ -f "proxy-server-amd64" ]; then
           echo "Creating Linux AMD64 archive..."
-          tar -czf release/EZ-Encrypt-Middleware-linux-amd64.tar.gz \
-            proxy-server-amd64 \
-            README.md \
-            .env
-          echo "Created: EZ-Encrypt-Middleware-linux-amd64.tar.gz"
+          cd release
+          zip -r EZ-Encrypt-Middleware-linux-amd64.zip \
+            ../proxy-server-amd64 \
+            ../README.md \
+            ../.env
+          cd ..
+          echo "Created: EZ-Encrypt-Middleware-linux-amd64.zip"
         else
           echo "Warning: proxy-server-amd64 not found"
         fi
