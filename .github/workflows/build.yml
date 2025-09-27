@@ -162,60 +162,96 @@ jobs:
         
     - name: Create release archive
       run: |
-        # 清理并创建release目录
+        # 清理环境
         rm -rf release
         mkdir -p release
         
-        # 复制通用文件
-        cp README.md release/
-        cp .env release/
-        
-        # 创建压缩包函数
-        create_archive() {
-          local platform=$1
-          local binary=$2
-          local archive_name=$3
-          
-          if [ -f "$binary" ]; then
-            echo "Creating archive for $platform..."
-            cp "$binary" release/
-            cd release
-            
-            if [[ "$archive_name" == *.zip ]]; then
-              zip "$archive_name" "$binary" README.md .env
-            else
-              tar -czf "$archive_name" "$binary" README.md .env
-            fi
-            
-            cd ..
-            mv "release/$archive_name" .
-            echo "Created: $archive_name"
-          else
-            echo "Binary $binary not found, skipping $platform"
-          fi
-        }
+        # 显示当前目录内容
+        echo "Current directory contents:"
+        ls -la
         
         # 根据架构选择创建相应的压缩包
         ARCHITECTURE="${{ github.event.inputs.ARCHITECTURE || 'all' }}"
+        echo "Selected architecture: $ARCHITECTURE"
         
+        # Linux ARM64
         if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "arm64" ]; then
-          create_archive "Linux ARM64" "proxy-server-arm64" "EZ-Encrypt-Middleware-linux-arm64.tar.gz"
-          create_archive "macOS ARM64" "proxy-server-darwin-arm64" "EZ-Encrypt-Middleware-darwin-arm64.tar.gz"
+          if [ -f "proxy-server-arm64" ]; then
+            echo "Creating Linux ARM64 archive..."
+            mkdir -p temp-linux-arm64
+            cp proxy-server-arm64 temp-linux-arm64/
+            cp README.md temp-linux-arm64/
+            cp .env temp-linux-arm64/
+            tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz -C temp-linux-arm64 .
+            rm -rf temp-linux-arm64
+            echo "Created: EZ-Encrypt-Middleware-linux-arm64.tar.gz"
+          fi
         fi
         
+        # Linux AMD64
         if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
-          create_archive "Linux AMD64" "proxy-server-amd64" "EZ-Encrypt-Middleware-linux-amd64.tar.gz"
-          create_archive "Windows AMD64" "proxy-server-windows-amd64.exe" "EZ-Encrypt-Middleware-windows-amd64.zip"
-          create_archive "macOS AMD64" "proxy-server-darwin-amd64" "EZ-Encrypt-Middleware-darwin-amd64.tar.gz"
+          if [ -f "proxy-server-amd64" ]; then
+            echo "Creating Linux AMD64 archive..."
+            mkdir -p temp-linux-amd64
+            cp proxy-server-amd64 temp-linux-amd64/
+            cp README.md temp-linux-amd64/
+            cp .env temp-linux-amd64/
+            tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz -C temp-linux-amd64 .
+            rm -rf temp-linux-amd64
+            echo "Created: EZ-Encrypt-Middleware-linux-amd64.tar.gz"
+          fi
+        fi
+        
+        # Windows AMD64
+        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
+          if [ -f "proxy-server-windows-amd64.exe" ]; then
+            echo "Creating Windows AMD64 archive..."
+            mkdir -p temp-windows-amd64
+            cp proxy-server-windows-amd64.exe temp-windows-amd64/
+            cp README.md temp-windows-amd64/
+            cp .env temp-windows-amd64/
+            cd temp-windows-amd64
+            zip ../EZ-Encrypt-Middleware-windows-amd64.zip *
+            cd ..
+            rm -rf temp-windows-amd64
+            echo "Created: EZ-Encrypt-Middleware-windows-amd64.zip"
+          fi
+        fi
+        
+        # macOS AMD64
+        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
+          if [ -f "proxy-server-darwin-amd64" ]; then
+            echo "Creating macOS AMD64 archive..."
+            mkdir -p temp-darwin-amd64
+            cp proxy-server-darwin-amd64 temp-darwin-amd64/
+            cp README.md temp-darwin-amd64/
+            cp .env temp-darwin-amd64/
+            tar -czf EZ-Encrypt-Middleware-darwin-amd64.tar.gz -C temp-darwin-amd64 .
+            rm -rf temp-darwin-amd64
+            echo "Created: EZ-Encrypt-Middleware-darwin-amd64.tar.gz"
+          fi
+        fi
+        
+        # macOS ARM64
+        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "arm64" ]; then
+          if [ -f "proxy-server-darwin-arm64" ]; then
+            echo "Creating macOS ARM64 archive..."
+            mkdir -p temp-darwin-arm64
+            cp proxy-server-darwin-arm64 temp-darwin-arm64/
+            cp README.md temp-darwin-arm64/
+            cp .env temp-darwin-arm64/
+            tar -czf EZ-Encrypt-Middleware-darwin-arm64.tar.gz -C temp-darwin-arm64 .
+            rm -rf temp-darwin-arm64
+            echo "Created: EZ-Encrypt-Middleware-darwin-arm64.tar.gz"
+          fi
         fi
         
         # 移动所有压缩包到release目录
-        mkdir -p release
         mv EZ-Encrypt-Middleware-*.tar.gz EZ-Encrypt-Middleware-*.zip release/ 2>/dev/null || true
         
-        # 显示创建的文件
-        echo "Final archives:"
-        ls -la release/*.tar.gz release/*.zip 2>/dev/null || echo "No archives created"
+        # 显示最终结果
+        echo "Final archives in release directory:"
+        ls -la release/
         
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
