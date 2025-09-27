@@ -58,7 +58,6 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      # 设置默认环境变量，可以通过workflow_dispatch输入或secrets覆盖
       PORT: ${{ github.event.inputs.PORT || '3000' }}
       BACKEND_API_URL: ${{ github.event.inputs.BACKEND_API_URL || secrets.BACKEND_API_URL || 'https://skhsn6q4pnv95.ezdemo.xyz' }}
       PATH_PREFIX: ${{ github.event.inputs.PATH_PREFIX || secrets.PATH_PREFIX || '/ez/ez' }}
@@ -79,108 +78,69 @@ jobs:
       with:
         go-version: '1.24'
         
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-          
     - name: Download dependencies
       run: go mod download
-      
-    - name: Verify dependencies
-      run: go mod verify
       
     - name: Generate .env file
       run: |
         cat > .env << EOF
-        # 1. 基础服务器设置
         PORT=$PORT
         BACKEND_API_URL=$BACKEND_API_URL
         PATH_PREFIX=$PATH_PREFIX
-        
-        # 2. CORS / 安全设置
         CORS_ORIGIN=$CORS_ORIGIN
         ALLOWED_ORIGINS=$ALLOWED_ORIGINS
         REQUEST_TIMEOUT=$REQUEST_TIMEOUT
         ENABLE_LOGGING=$ENABLE_LOGGING
         DEBUG_MODE=$DEBUG_MODE
-        
-        # 3. 支付回调免验证路径
         ALLOWED_PAYMENT_NOTIFY_PATHS=$ALLOWED_PAYMENT_NOTIFY_PATHS
-        
-        # 5. AES 加解密配置
         AES_KEY=$AES_KEY
         EOF
         
-        echo "Generated .env file:"
-        cat .env
-        
-    - name: Build for Linux ARM64
+    - name: Build ARM64
       run: |
         GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-arm64 .
         
-    - name: Build for Linux AMD64
+    - name: Build AMD64
       run: |
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-amd64 .
         
-    - name: Create release archive
+    - name: Package ARM64
       run: |
-        # 清理环境
-        rm -rf release
-        mkdir -p release
+        mkdir -p arm64-package
+        cp proxy-server-arm64 arm64-package/
+        cp README.md arm64-package/
+        cp .env arm64-package/
+        cd arm64-package
+        zip -r ../EZ-Encrypt-Middleware-linux-arm64.zip *
+        cd ..
+        rm -rf arm64-package
         
-        # 显示当前目录内容
-        echo "Current directory contents:"
-        ls -la
+    - name: Package AMD64
+      run: |
+        mkdir -p amd64-package
+        cp proxy-server-amd64 amd64-package/
+        cp README.md amd64-package/
+        cp .env amd64-package/
+        cd amd64-package
+        zip -r ../EZ-Encrypt-Middleware-linux-amd64.zip *
+        cd ..
+        rm -rf amd64-package
         
-        # 创建Linux ARM64压缩包
-        if [ -f "proxy-server-arm64" ]; then
-          echo "Creating Linux ARM64 archive..."
-          cd release
-          zip -r EZ-Encrypt-Middleware-linux-arm64.zip \
-            ../proxy-server-arm64 \
-            ../README.md \
-            ../.env
-          cd ..
-          echo "Created: EZ-Encrypt-Middleware-linux-arm64.zip"
-        else
-          echo "Warning: proxy-server-arm64 not found"
-        fi
-        
-        # 创建Linux AMD64压缩包
-        if [ -f "proxy-server-amd64" ]; then
-          echo "Creating Linux AMD64 archive..."
-          cd release
-          zip -r EZ-Encrypt-Middleware-linux-amd64.zip \
-            ../proxy-server-amd64 \
-            ../README.md \
-            ../.env
-          cd ..
-          echo "Created: EZ-Encrypt-Middleware-linux-amd64.zip"
-        else
-          echo "Warning: proxy-server-amd64 not found"
-        fi
-        
-        # 显示最终结果
-        echo "Final archives in release directory:"
-        ls -la release/
-        
-    - name: Upload release artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: release-binaries
-        path: release/
+        path: |
+          EZ-Encrypt-Middleware-linux-arm64.zip
+          EZ-Encrypt-Middleware-linux-amd64.zip
         
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          release/EZ-Encrypt-Middleware-linux-arm64.zip
-          release/EZ-Encrypt-Middleware-linux-amd64.zip
+          EZ-Encrypt-Middleware-linux-arm64.zip
+          EZ-Encrypt-Middleware-linux-amd64.zip
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
