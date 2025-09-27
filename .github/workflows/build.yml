@@ -148,7 +148,11 @@ jobs:
         
     - name: Create release archive
       run: |
+        # 清理并创建release目录
+        rm -rf release
         mkdir -p release
+        
+        # 复制文件到release目录
         cp proxy-server-arm64 release/
         cp proxy-server-amd64 release/
         cp proxy-server-windows-amd64.exe release/
@@ -157,12 +161,29 @@ jobs:
         cp README.md release/
         cp .env release/
         
+        # 创建压缩包
         cd release
-        tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz proxy-server-arm64 README.md .env
-        tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz proxy-server-amd64 README.md .env
-        zip EZ-Encrypt-Middleware-windows-amd64.zip proxy-server-windows-amd64.exe README.md .env
-        tar -czf EZ-Encrypt-Middleware-darwin-amd64.tar.gz proxy-server-darwin-amd64 README.md .env
-        tar -czf EZ-Encrypt-Middleware-darwin-arm64.tar.gz proxy-server-darwin-arm64 README.md .env
+        
+        # Linux ARM64
+        tar -czf ../EZ-Encrypt-Middleware-linux-arm64.tar.gz proxy-server-arm64 README.md .env
+        
+        # Linux AMD64
+        tar -czf ../EZ-Encrypt-Middleware-linux-amd64.tar.gz proxy-server-amd64 README.md .env
+        
+        # Windows AMD64
+        zip ../EZ-Encrypt-Middleware-windows-amd64.zip proxy-server-windows-amd64.exe README.md .env
+        
+        # macOS AMD64
+        tar -czf ../EZ-Encrypt-Middleware-darwin-amd64.tar.gz proxy-server-darwin-amd64 README.md .env
+        
+        # macOS ARM64
+        tar -czf ../EZ-Encrypt-Middleware-darwin-arm64.tar.gz proxy-server-darwin-arm64 README.md .env
+        
+        # 移动压缩包到release目录
+        mv ../EZ-Encrypt-Middleware-*.tar.gz ../EZ-Encrypt-Middleware-*.zip .
+        
+        # 显示创建的文件
+        ls -la *.tar.gz *.zip
         
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
