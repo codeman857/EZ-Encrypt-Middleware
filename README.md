@@ -83,18 +83,13 @@ AES_KEY=4c6f8e5f9467dc71
 
 - **Linux ARM64**: `EZ-Encrypt-Middleware-linux-arm64.tar.gz`
 - **Linux AMD64**: `EZ-Encrypt-Middleware-linux-amd64.tar.gz`
-- **Windows AMD64**: `EZ-Encrypt-Middleware-windows-amd64.zip`
-- **macOS AMD64**: `EZ-Encrypt-Middleware-darwin-amd64.tar.gz`
-- **macOS ARM64**: `EZ-Encrypt-Middleware-darwin-arm64.tar.gz`
 
 下载后解压，压缩包中已包含配置好的 `.env` 文件，可直接运行：
 
 ```bash
-# Linux/macOS
-./proxy-server
-
-# Windows
-proxy-server.exe
+# Linux
+./proxy-server-arm64    # ARM64版本
+./proxy-server-amd64    # AMD64版本
 ```
 
 > **注意**: 如果下载的版本是通过手动触发构建的，`.env` 文件已包含你设置的配置参数。如果是通过标签触发的构建，会使用 GitHub Secrets 中的默认配置。
@@ -130,10 +125,7 @@ go run main.go
 ### 构建的架构
 
 - Linux ARM64
-- Linux AMD64  
-- Windows AMD64
-- macOS AMD64
-- macOS ARM64
+- Linux AMD64
 
 ### 配置方式
 
@@ -151,7 +143,7 @@ go run main.go
 - **ALLOWED_PAYMENT_NOTIFY_PATHS**: 支付回调免验证路径（默认: 空）
 - **ENABLE_LOGGING**: 是否启用日志（默认: false）
 
-> **注意**: 默认构建所有架构（ARM64 + AMD64），`DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
+> **注意**: 默认构建Linux ARM64和AMD64架构，`DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
 
 #### 方式2: 使用GitHub Secrets设置默认值
 
