@@ -129,42 +129,39 @@ jobs:
     - name: Create release archive
       run: |
         # 清理环境
-        rm -rf release
+        rm -rf release temp-*
         mkdir -p release
         
         # 显示当前目录内容
         echo "Current directory contents:"
         ls -la
         
-        # 创建Linux ARM64和AMD64的压缩包
-        echo "Creating archives for Linux ARM64 and AMD64..."
-        
-        # Linux ARM64
+        # 创建Linux ARM64压缩包
         if [ -f "proxy-server-arm64" ]; then
           echo "Creating Linux ARM64 archive..."
-          mkdir -p temp-linux-arm64
-          cp proxy-server-arm64 temp-linux-arm64/
-          cp README.md temp-linux-arm64/
-          cp .env temp-linux-arm64/
-          tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz -C temp-linux-arm64 .
-          rm -rf temp-linux-arm64
+          tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz \
+            proxy-server-arm64 \
+            README.md \
+            .env
           echo "Created: EZ-Encrypt-Middleware-linux-arm64.tar.gz"
+        else
+          echo "Warning: proxy-server-arm64 not found"
         fi
         
-        # Linux AMD64
+        # 创建Linux AMD64压缩包
         if [ -f "proxy-server-amd64" ]; then
           echo "Creating Linux AMD64 archive..."
-          mkdir -p temp-linux-amd64
-          cp proxy-server-amd64 temp-linux-amd64/
-          cp README.md temp-linux-amd64/
-          cp .env temp-linux-amd64/
-          tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz -C temp-linux-amd64 .
-          rm -rf temp-linux-amd64
+          tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz \
+            proxy-server-amd64 \
+            README.md \
+            .env
           echo "Created: EZ-Encrypt-Middleware-linux-amd64.tar.gz"
+        else
+          echo "Warning: proxy-server-amd64 not found"
         fi
         
-        # 移动所有压缩包到release目录
-        mv EZ-Encrypt-Middleware-*.tar.gz EZ-Encrypt-Middleware-*.zip release/ 2>/dev/null || true
+        # 移动压缩包到release目录
+        mv EZ-Encrypt-Middleware-*.tar.gz release/ 2>/dev/null || echo "No archives to move"
         
         # 显示最终结果
         echo "Final archives in release directory:"
