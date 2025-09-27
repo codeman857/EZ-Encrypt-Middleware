@@ -179,11 +179,8 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          release/EZ-Encrypt-Middleware-linux-arm64.tar.gz
-          release/EZ-Encrypt-Middleware-linux-amd64.tar.gz
-          release/EZ-Encrypt-Middleware-windows-amd64.zip
-          release/EZ-Encrypt-Middleware-darwin-amd64.tar.gz
-          release/EZ-Encrypt-Middleware-darwin-arm64.tar.gz
+          release/EZ-Encrypt-Middleware-linux-arm64.zip
+          release/EZ-Encrypt-Middleware-linux-amd64.zip
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
