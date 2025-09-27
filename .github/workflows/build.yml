@@ -6,15 +6,6 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      ARCHITECTURE:
-        description: '选择要构建的架构'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-        - 'all'
-        - 'arm64'
-        - 'amd64'
       BACKEND_API_URL:
         description: '后端API地址'
         required: true
@@ -53,6 +44,14 @@ on:
         required: false
         default: ''
         type: string
+      ENABLE_LOGGING:
+        description: '是否启用日志'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
 
 jobs:
   build:
@@ -67,7 +66,7 @@ jobs:
       ALLOWED_ORIGINS: ${{ github.event.inputs.ALLOWED_ORIGINS || secrets.ALLOWED_ORIGINS || '*' }}
       REQUEST_TIMEOUT: ${{ github.event.inputs.REQUEST_TIMEOUT || secrets.REQUEST_TIMEOUT || '30000' }}
       ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ github.event.inputs.ALLOWED_PAYMENT_NOTIFY_PATHS || secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
-      ENABLE_LOGGING: ${{ secrets.ENABLE_LOGGING || 'false' }}
+      ENABLE_LOGGING: ${{ github.event.inputs.ENABLE_LOGGING || secrets.ENABLE_LOGGING || 'false' }}
       DEBUG_MODE: ${{ secrets.DEBUG_MODE || 'false' }}
       AES_KEY: ${{ github.event.inputs.AES_KEY || secrets.AES_KEY || '4c6f8e5f9467dc71' }}
     
@@ -120,27 +119,22 @@ jobs:
         cat .env
         
     - name: Build for Linux ARM64
-      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'arm64'
       run: |
         GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-arm64 .
         
     - name: Build for Linux AMD64
-      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'amd64'
       run: |
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-amd64 .
         
     - name: Build for Windows AMD64
-      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'amd64'
       run: |
         GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-windows-amd64.exe .
         
     - name: Build for macOS AMD64
-      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'amd64'
       run: |
         GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-darwin-amd64 .
         
     - name: Build for macOS ARM64
-      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'arm64'
       run: |
         GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-darwin-arm64 .
         
@@ -154,80 +148,69 @@ jobs:
         echo "Current directory contents:"
         ls -la
         
-        # 根据架构选择创建相应的压缩包
-        ARCHITECTURE="${{ github.event.inputs.ARCHITECTURE || 'all' }}"
-        echo "Selected architecture: $ARCHITECTURE"
+        # 创建所有架构的压缩包
+        echo "Creating archives for all architectures..."
         
         # Linux ARM64
-        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "arm64" ]; then
-          if [ -f "proxy-server-arm64" ]; then
-            echo "Creating Linux ARM64 archive..."
-            mkdir -p temp-linux-arm64
-            cp proxy-server-arm64 temp-linux-arm64/
-            cp README.md temp-linux-arm64/
-            cp .env temp-linux-arm64/
-            tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz -C temp-linux-arm64 .
-            rm -rf temp-linux-arm64
-            echo "Created: EZ-Encrypt-Middleware-linux-arm64.tar.gz"
-          fi
+        if [ -f "proxy-server-arm64" ]; then
+          echo "Creating Linux ARM64 archive..."
+          mkdir -p temp-linux-arm64
+          cp proxy-server-arm64 temp-linux-arm64/
+          cp README.md temp-linux-arm64/
+          cp .env temp-linux-arm64/
+          tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz -C temp-linux-arm64 .
+          rm -rf temp-linux-arm64
+          echo "Created: EZ-Encrypt-Middleware-linux-arm64.tar.gz"
         fi
         
         # Linux AMD64
-        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
-          if [ -f "proxy-server-amd64" ]; then
-            echo "Creating Linux AMD64 archive..."
-            mkdir -p temp-linux-amd64
-            cp proxy-server-amd64 temp-linux-amd64/
-            cp README.md temp-linux-amd64/
-            cp .env temp-linux-amd64/
-            tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz -C temp-linux-amd64 .
-            rm -rf temp-linux-amd64
-            echo "Created: EZ-Encrypt-Middleware-linux-amd64.tar.gz"
-          fi
+        if [ -f "proxy-server-amd64" ]; then
+          echo "Creating Linux AMD64 archive..."
+          mkdir -p temp-linux-amd64
+          cp proxy-server-amd64 temp-linux-amd64/
+          cp README.md temp-linux-amd64/
+          cp .env temp-linux-amd64/
+          tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz -C temp-linux-amd64 .
+          rm -rf temp-linux-amd64
+          echo "Created: EZ-Encrypt-Middleware-linux-amd64.tar.gz"
         fi
         
         # Windows AMD64
-        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
-          if [ -f "proxy-server-windows-amd64.exe" ]; then
-            echo "Creating Windows AMD64 archive..."
-            mkdir -p temp-windows-amd64
-            cp proxy-server-windows-amd64.exe temp-windows-amd64/
-            cp README.md temp-windows-amd64/
-            cp .env temp-windows-amd64/
-            cd temp-windows-amd64
-            zip ../EZ-Encrypt-Middleware-windows-amd64.zip *
-            cd ..
-            rm -rf temp-windows-amd64
-            echo "Created: EZ-Encrypt-Middleware-windows-amd64.zip"
-          fi
+        if [ -f "proxy-server-windows-amd64.exe" ]; then
+          echo "Creating Windows AMD64 archive..."
+          mkdir -p temp-windows-amd64
+          cp proxy-server-windows-amd64.exe temp-windows-amd64/
+          cp README.md temp-windows-amd64/
+          cp .env temp-windows-amd64/
+          cd temp-windows-amd64
+          zip ../EZ-Encrypt-Middleware-windows-amd64.zip *
+          cd ..
+          rm -rf temp-windows-amd64
+          echo "Created: EZ-Encrypt-Middleware-windows-amd64.zip"
         fi
         
         # macOS AMD64
-        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "amd64" ]; then
-          if [ -f "proxy-server-darwin-amd64" ]; then
-            echo "Creating macOS AMD64 archive..."
-            mkdir -p temp-darwin-amd64
-            cp proxy-server-darwin-amd64 temp-darwin-amd64/
-            cp README.md temp-darwin-amd64/
-            cp .env temp-darwin-amd64/
-            tar -czf EZ-Encrypt-Middleware-darwin-amd64.tar.gz -C temp-darwin-amd64 .
-            rm -rf temp-darwin-amd64
-            echo "Created: EZ-Encrypt-Middleware-darwin-amd64.tar.gz"
-          fi
+        if [ -f "proxy-server-darwin-amd64" ]; then
+          echo "Creating macOS AMD64 archive..."
+          mkdir -p temp-darwin-amd64
+          cp proxy-server-darwin-amd64 temp-darwin-amd64/
+          cp README.md temp-darwin-amd64/
+          cp .env temp-darwin-amd64/
+          tar -czf EZ-Encrypt-Middleware-darwin-amd64.tar.gz -C temp-darwin-amd64 .
+          rm -rf temp-darwin-amd64
+          echo "Created: EZ-Encrypt-Middleware-darwin-amd64.tar.gz"
         fi
         
         # macOS ARM64
-        if [ "$ARCHITECTURE" = "all" ] || [ "$ARCHITECTURE" = "arm64" ]; then
-          if [ -f "proxy-server-darwin-arm64" ]; then
-            echo "Creating macOS ARM64 archive..."
-            mkdir -p temp-darwin-arm64
-            cp proxy-server-darwin-arm64 temp-darwin-arm64/
-            cp README.md temp-darwin-arm64/
-            cp .env temp-darwin-arm64/
-            tar -czf EZ-Encrypt-Middleware-darwin-arm64.tar.gz -C temp-darwin-arm64 .
-            rm -rf temp-darwin-arm64
-            echo "Created: EZ-Encrypt-Middleware-darwin-arm64.tar.gz"
-          fi
+        if [ -f "proxy-server-darwin-arm64" ]; then
+          echo "Creating macOS ARM64 archive..."
+          mkdir -p temp-darwin-arm64
+          cp proxy-server-darwin-arm64 temp-darwin-arm64/
+          cp README.md temp-darwin-arm64/
+          cp .env temp-darwin-arm64/
+          tar -czf EZ-Encrypt-Middleware-darwin-arm64.tar.gz -C temp-darwin-arm64 .
+          rm -rf temp-darwin-arm64
+          echo "Created: EZ-Encrypt-Middleware-darwin-arm64.tar.gz"
         fi
         
         # 移动所有压缩包到release目录

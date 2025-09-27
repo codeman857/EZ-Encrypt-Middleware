@@ -141,10 +141,6 @@ go run main.go
 
 在 GitHub Actions 页面手动触发构建时，可以设置以下参数：
 
-- **ARCHITECTURE**: 选择要构建的架构（默认: all）
-  - `all`: 构建所有架构（ARM64 + AMD64）
-  - `arm64`: 只构建ARM64架构（Linux ARM64, macOS ARM64）
-  - `amd64`: 只构建AMD64架构（Linux AMD64, Windows AMD64, macOS AMD64）
 - **BACKEND_API_URL**: 后端API地址（必填）
 - **AES_KEY**: AES加密密钥，16位16进制（必填）
 - **PORT**: 服务器监听端口（默认: 3000）
@@ -153,8 +149,9 @@ go run main.go
 - **ALLOWED_ORIGINS**: 允许的来源（默认: *）
 - **REQUEST_TIMEOUT**: 请求超时毫秒数（默认: 30000）
 - **ALLOWED_PAYMENT_NOTIFY_PATHS**: 支付回调免验证路径（默认: 空）
+- **ENABLE_LOGGING**: 是否启用日志（默认: false）
 
-> **注意**: `ENABLE_LOGGING` 和 `DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
+> **注意**: 默认构建所有架构（ARM64 + AMD64），`DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
 
 #### 方式2: 使用GitHub Secrets设置默认值
 
