@@ -6,6 +6,15 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
+      ARCHITECTURE:
+        description: '选择要构建的架构'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - 'all'
+        - 'arm64'
+        - 'amd64'
       PORT:
         description: '服务器监听端口'
         required: false
@@ -127,22 +136,27 @@ jobs:
         cat .env
         
     - name: Build for Linux ARM64
+      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'arm64'
       run: |
         GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-arm64 .
         
     - name: Build for Linux AMD64
+      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'amd64'
       run: |
         GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-amd64 .
         
     - name: Build for Windows AMD64
+      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'amd64'
       run: |
         GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-windows-amd64.exe .
         
     - name: Build for macOS AMD64
+      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'amd64'
       run: |
         GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-darwin-amd64 .
         
     - name: Build for macOS ARM64
+      if: github.event.inputs.ARCHITECTURE == 'all' || github.event.inputs.ARCHITECTURE == 'arm64'
       run: |
         GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-darwin-arm64 .
         
@@ -153,37 +167,60 @@ jobs:
         mkdir -p release
         
         # 复制文件到release目录
-        cp proxy-server-arm64 release/
-        cp proxy-server-amd64 release/
-        cp proxy-server-windows-amd64.exe release/
-        cp proxy-server-darwin-amd64 release/
-        cp proxy-server-darwin-arm64 release/
         cp README.md release/
         cp .env release/
+        
+        # 根据架构选择复制相应的二进制文件
+        if [ -f "proxy-server-arm64" ]; then
+          cp proxy-server-arm64 release/
+        fi
+        if [ -f "proxy-server-amd64" ]; then
+          cp proxy-server-amd64 release/
+        fi
+        if [ -f "proxy-server-windows-amd64.exe" ]; then
+          cp proxy-server-windows-amd64.exe release/
+        fi
+        if [ -f "proxy-server-darwin-amd64" ]; then
+          cp proxy-server-darwin-amd64 release/
+        fi
+        if [ -f "proxy-server-darwin-arm64" ]; then
+          cp proxy-server-darwin-arm64 release/
+        fi
         
         # 创建压缩包
         cd release
         
         # Linux ARM64
-        tar -czf ../EZ-Encrypt-Middleware-linux-arm64.tar.gz proxy-server-arm64 README.md .env
+        if [ -f "proxy-server-arm64" ]; then
+          tar -czf ../EZ-Encrypt-Middleware-linux-arm64.tar.gz proxy-server-arm64 README.md .env
+        fi
         
         # Linux AMD64
-        tar -czf ../EZ-Encrypt-Middleware-linux-amd64.tar.gz proxy-server-amd64 README.md .env
+        if [ -f "proxy-server-amd64" ]; then
+          tar -czf ../EZ-Encrypt-Middleware-linux-amd64.tar.gz proxy-server-amd64 README.md .env
+        fi
         
         # Windows AMD64
-        zip ../EZ-Encrypt-Middleware-windows-amd64.zip proxy-server-windows-amd64.exe README.md .env
+        if [ -f "proxy-server-windows-amd64.exe" ]; then
+          zip ../EZ-Encrypt-Middleware-windows-amd64.zip proxy-server-windows-amd64.exe README.md .env
+        fi
         
         # macOS AMD64
-        tar -czf ../EZ-Encrypt-Middleware-darwin-amd64.tar.gz proxy-server-darwin-amd64 README.md .env
+        if [ -f "proxy-server-darwin-amd64" ]; then
+          tar -czf ../EZ-Encrypt-Middleware-darwin-amd64.tar.gz proxy-server-darwin-amd64 README.md .env
+        fi
         
         # macOS ARM64
-        tar -czf ../EZ-Encrypt-Middleware-darwin-arm64.tar.gz proxy-server-darwin-arm64 README.md .env
+        if [ -f "proxy-server-darwin-arm64" ]; then
+          tar -czf ../EZ-Encrypt-Middleware-darwin-arm64.tar.gz proxy-server-darwin-arm64 README.md .env
+        fi
         
         # 移动压缩包到release目录
-        mv ../EZ-Encrypt-Middleware-*.tar.gz ../EZ-Encrypt-Middleware-*.zip .
+        mv ../EZ-Encrypt-Middleware-*.tar.gz ../EZ-Encrypt-Middleware-*.zip . 2>/dev/null || true
         
         # 显示创建的文件
-        ls -la *.tar.gz *.zip
+        echo "Created archives:"
+        ls -la *.tar.gz *.zip 2>/dev/null || echo "No archives created"
         
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4

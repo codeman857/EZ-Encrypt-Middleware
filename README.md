@@ -141,6 +141,10 @@ go run main.go
 
 在 GitHub Actions 页面手动触发构建时，可以设置以下参数：
 
+- **ARCHITECTURE**: 选择要构建的架构（默认: all）
+  - `all`: 构建所有架构（ARM64 + AMD64）
+  - `arm64`: 只构建ARM64架构（Linux ARM64, macOS ARM64）
+  - `amd64`: 只构建AMD64架构（Linux AMD64, Windows AMD64, macOS AMD64）
 - **PORT**: 服务器监听端口（默认: 3000）
 - **BACKEND_API_URL**: 后端API地址（必填）
 - **PATH_PREFIX**: 路径前缀（默认: /ez/ez）
