@@ -141,7 +141,7 @@ go run main.go
 - **ALLOWED_ORIGINS**: 允许的来源（默认: *）
 - **REQUEST_TIMEOUT**: 请求超时毫秒数（默认: 30000）
 - **ALLOWED_PAYMENT_NOTIFY_PATHS**: 支付回调免验证路径（默认: 空）
-- **ENABLE_LOGGING**: 是否启用日志（默认: false）
+- **ENABLE_LOGGING**: 是否输出请求日志（默认: false）
 
 > **注意**: 默认构建Linux ARM64和AMD64架构，`DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
 
