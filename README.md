@@ -77,7 +77,24 @@ AES_KEY=4c6f8e5f9467dc71
 
 ## 运行方式
 
-### 1. 编译运行
+### 1. 使用预编译版本（推荐）
+
+从 [Releases](https://github.com/codeman857/EZ-Encrypt-Middleware/releases) 页面下载对应平台的预编译版本：
+
+- **Linux ARM64**: `EZ-Encrypt-Middleware-linux-arm64.zip`
+- **Linux AMD64**: `EZ-Encrypt-Middleware-linux-amd64.zip`
+
+下载后解压，压缩包中已包含配置好的 `.env` 文件，可直接运行：
+
+```bash
+# Linux
+./proxy-server-arm64    # ARM64版本
+./proxy-server-amd64    # AMD64版本
+```
+
+> **注意**: 如果下载的版本是通过手动触发构建的，`.env` 文件已包含你设置的配置参数。如果是通过标签触发的构建，会使用 GitHub Secrets 中的默认配置。
+
+### 2. 编译运行
 
 ```bash
 # 编译
@@ -89,11 +106,78 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o proxy-server // amd64
 ./proxy-server
 ```
 
-### 2. 直接运行
+### 3. 直接运行
 
 ```bash
 go run main.go
 ```
+
+## GitHub Actions 自动构建
+
+本项目配置了 GitHub Actions 自动构建和发布：
+
+### 自动构建触发条件
+
+1. **推送标签**: 当推送以 `v` 开头的标签时（如 `v1.0.0`），会自动构建并发布到 GitHub Releases
+2. **手动触发**: 在 GitHub Actions 页面可以手动触发构建，支持自定义配置参数
+3. **CI 测试**: 每次推送到 `main` 或 `develop` 分支时会运行测试
+
+### 构建的架构
+
+- Linux ARM64
+- Linux AMD64
+
+### 配置方式
+
+#### 方式1: 手动触发时设置参数
+
+在 GitHub Actions 页面手动触发构建时，可以设置以下参数：
+
+- **BACKEND_API_URL**: 后端API地址（必填）
+- **AES_KEY**: AES加密密钥，16位16进制（必填）
+- **PORT**: 服务器监听端口（默认: 3000）
+- **PATH_PREFIX**: 路径前缀（默认: /ez/ez）
+- **CORS_ORIGIN**: CORS源（默认: *）
+- **ALLOWED_ORIGINS**: 允许的来源（默认: *）
+- **REQUEST_TIMEOUT**: 请求超时毫秒数（默认: 30000）
+- **ALLOWED_PAYMENT_NOTIFY_PATHS**: 支付回调免验证路径（默认: 空）
+- **ENABLE_LOGGING**: 是否输出请求日志（默认: false）
+
+> **注意**: 默认构建Linux ARM64和AMD64架构，`DEBUG_MODE` 参数已移除，如需配置请使用GitHub Secrets。
+
+#### 方式2: 使用GitHub Secrets设置默认值
+
+在仓库的 Settings → Secrets and variables → Actions 中添加以下secrets：
+
+```
+BACKEND_API_URL=https://your-api.com
+PATH_PREFIX=/your/prefix
+CORS_ORIGIN=https://yourdomain.com
+ALLOWED_ORIGINS=https://yourdomain.com,https://anotherdomain.com
+REQUEST_TIMEOUT=60000
+ENABLE_LOGGING=true
+DEBUG_MODE=false
+ALLOWED_PAYMENT_NOTIFY_PATHS=/api/v1/payment/notify
+AES_KEY=your16hexkey123456
+```
+
+### 使用自动构建
+
+1. **通过标签发布**：
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **手动触发构建**：
+   - 访问 [Actions](https://github.com/codeman857/EZ-Encrypt-Middleware/actions) 页面
+   - 选择 "Build and Release" 工作流
+   - 点击 "Run workflow"
+   - 填写必要的参数（BACKEND_API_URL 和 AES_KEY 为必填）
+
+3. **查看构建结果**：
+   - 构建完成后，在 [Releases](https://github.com/codeman857/EZ-Encrypt-Middleware/releases) 页面下载预编译版本
+   - 下载的压缩包中已包含配置好的 `.env` 文件，可直接运行
 
 ## 使用说明
 

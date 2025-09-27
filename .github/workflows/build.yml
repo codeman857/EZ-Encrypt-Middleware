@@ -1,0 +1,146 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      BACKEND_API_URL:
+        description: '后端API地址'
+        required: true
+        type: string
+      AES_KEY:
+        description: 'AES加密密钥(16位16进制)'
+        required: true
+        type: string
+      PORT:
+        description: '服务器监听端口'
+        required: false
+        default: '3000'
+        type: string
+      PATH_PREFIX:
+        description: '路径前缀'
+        required: false
+        default: '/ez/ez'
+        type: string
+      CORS_ORIGIN:
+        description: 'CORS源'
+        required: false
+        default: '*'
+        type: string
+      ALLOWED_ORIGINS:
+        description: '允许的来源'
+        required: false
+        default: '*'
+        type: string
+      REQUEST_TIMEOUT:
+        description: '请求超时(ms)'
+        required: false
+        default: '30000'
+        type: string
+      ALLOWED_PAYMENT_NOTIFY_PATHS:
+        description: '支付回调免验证路径'
+        required: false
+        default: ''
+        type: string
+      ENABLE_LOGGING:
+        description: '是否输出请求日志'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    env:
+      PORT: ${{ github.event.inputs.PORT || '3000' }}
+      BACKEND_API_URL: ${{ github.event.inputs.BACKEND_API_URL || secrets.BACKEND_API_URL || 'https://skhsn6q4pnv95.ezdemo.xyz' }}
+      PATH_PREFIX: ${{ github.event.inputs.PATH_PREFIX || secrets.PATH_PREFIX || '/ez/ez' }}
+      CORS_ORIGIN: ${{ github.event.inputs.CORS_ORIGIN || secrets.CORS_ORIGIN || '*' }}
+      ALLOWED_ORIGINS: ${{ github.event.inputs.ALLOWED_ORIGINS || secrets.ALLOWED_ORIGINS || '*' }}
+      REQUEST_TIMEOUT: ${{ github.event.inputs.REQUEST_TIMEOUT || secrets.REQUEST_TIMEOUT || '30000' }}
+      ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ github.event.inputs.ALLOWED_PAYMENT_NOTIFY_PATHS || secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
+      ENABLE_LOGGING: ${{ github.event.inputs.ENABLE_LOGGING || secrets.ENABLE_LOGGING || 'false' }}
+      DEBUG_MODE: ${{ secrets.DEBUG_MODE || 'false' }}
+      AES_KEY: ${{ github.event.inputs.AES_KEY || secrets.AES_KEY || '4c6f8e5f9467dc71' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+        
+    - name: Download dependencies
+      run: go mod download
+      
+    - name: Generate .env file
+      run: |
+        cat > .env << EOF
+        PORT=$PORT
+        BACKEND_API_URL=$BACKEND_API_URL
+        PATH_PREFIX=$PATH_PREFIX
+        CORS_ORIGIN=$CORS_ORIGIN
+        ALLOWED_ORIGINS=$ALLOWED_ORIGINS
+        REQUEST_TIMEOUT=$REQUEST_TIMEOUT
+        ENABLE_LOGGING=$ENABLE_LOGGING
+        DEBUG_MODE=$DEBUG_MODE
+        ALLOWED_PAYMENT_NOTIFY_PATHS=$ALLOWED_PAYMENT_NOTIFY_PATHS
+        AES_KEY=$AES_KEY
+        EOF
+        
+    - name: Build ARM64
+      run: |
+        GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-arm64 .
+        
+    - name: Build AMD64
+      run: |
+        GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-amd64 .
+        
+    - name: Package ARM64
+      run: |
+        mkdir -p arm64-package
+        cp proxy-server-arm64 arm64-package/
+        cp README.md arm64-package/
+        cp .env arm64-package/
+        cd arm64-package
+        zip -r ../EZ-Encrypt-Middleware-linux-arm64.zip *
+        cd ..
+        rm -rf arm64-package
+        
+    - name: Package AMD64
+      run: |
+        mkdir -p amd64-package
+        cp proxy-server-amd64 amd64-package/
+        cp README.md amd64-package/
+        cp .env amd64-package/
+        cd amd64-package
+        zip -r ../EZ-Encrypt-Middleware-linux-amd64.zip *
+        cd ..
+        rm -rf amd64-package
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-binaries
+        path: |
+          EZ-Encrypt-Middleware-linux-arm64.zip
+          EZ-Encrypt-Middleware-linux-amd64.zip
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          EZ-Encrypt-Middleware-linux-arm64.zip
+          EZ-Encrypt-Middleware-linux-amd64.zip
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
