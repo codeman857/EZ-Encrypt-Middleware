@@ -1,0 +1,185 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      PORT:
+        description: '服务器监听端口'
+        required: false
+        default: '3000'
+        type: string
+      BACKEND_API_URL:
+        description: '后端API地址'
+        required: true
+        type: string
+      PATH_PREFIX:
+        description: '路径前缀'
+        required: false
+        default: '/ez/ez'
+        type: string
+      CORS_ORIGIN:
+        description: 'CORS源'
+        required: false
+        default: '*'
+        type: string
+      ALLOWED_ORIGINS:
+        description: '允许的来源'
+        required: false
+        default: '*'
+        type: string
+      REQUEST_TIMEOUT:
+        description: '请求超时(ms)'
+        required: false
+        default: '30000'
+        type: string
+      ENABLE_LOGGING:
+        description: '是否启用日志'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      DEBUG_MODE:
+        description: '是否启用调试模式'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      ALLOWED_PAYMENT_NOTIFY_PATHS:
+        description: '支付回调免验证路径'
+        required: false
+        default: ''
+        type: string
+      AES_KEY:
+        description: 'AES加密密钥(16位16进制)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    env:
+      # 设置默认环境变量，可以通过workflow_dispatch输入或secrets覆盖
+      PORT: ${{ github.event.inputs.PORT || '3000' }}
+      BACKEND_API_URL: ${{ github.event.inputs.BACKEND_API_URL || secrets.BACKEND_API_URL || 'https://skhsn6q4pnv95.ezdemo.xyz' }}
+      PATH_PREFIX: ${{ github.event.inputs.PATH_PREFIX || secrets.PATH_PREFIX || '/ez/ez' }}
+      CORS_ORIGIN: ${{ github.event.inputs.CORS_ORIGIN || secrets.CORS_ORIGIN || '*' }}
+      ALLOWED_ORIGINS: ${{ github.event.inputs.ALLOWED_ORIGINS || secrets.ALLOWED_ORIGINS || '*' }}
+      REQUEST_TIMEOUT: ${{ github.event.inputs.REQUEST_TIMEOUT || secrets.REQUEST_TIMEOUT || '30000' }}
+      ENABLE_LOGGING: ${{ github.event.inputs.ENABLE_LOGGING || secrets.ENABLE_LOGGING || 'false' }}
+      DEBUG_MODE: ${{ github.event.inputs.DEBUG_MODE || secrets.DEBUG_MODE || 'false' }}
+      ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ github.event.inputs.ALLOWED_PAYMENT_NOTIFY_PATHS || secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
+      AES_KEY: ${{ github.event.inputs.AES_KEY || secrets.AES_KEY || '4c6f8e5f9467dc71' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+        
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+          
+    - name: Download dependencies
+      run: go mod download
+      
+    - name: Verify dependencies
+      run: go mod verify
+      
+    - name: Generate .env file
+      run: |
+        cat > .env << EOF
+        # 1. 基础服务器设置
+        PORT=$PORT
+        BACKEND_API_URL=$BACKEND_API_URL
+        PATH_PREFIX=$PATH_PREFIX
+        
+        # 2. CORS / 安全设置
+        CORS_ORIGIN=$CORS_ORIGIN
+        ALLOWED_ORIGINS=$ALLOWED_ORIGINS
+        REQUEST_TIMEOUT=$REQUEST_TIMEOUT
+        ENABLE_LOGGING=$ENABLE_LOGGING
+        DEBUG_MODE=$DEBUG_MODE
+        
+        # 3. 支付回调免验证路径
+        ALLOWED_PAYMENT_NOTIFY_PATHS=$ALLOWED_PAYMENT_NOTIFY_PATHS
+        
+        # 5. AES 加解密配置
+        AES_KEY=$AES_KEY
+        EOF
+        
+        echo "Generated .env file:"
+        cat .env
+        
+    - name: Build for Linux ARM64
+      run: |
+        GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-arm64 .
+        
+    - name: Build for Linux AMD64
+      run: |
+        GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-amd64 .
+        
+    - name: Build for Windows AMD64
+      run: |
+        GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-windows-amd64.exe .
+        
+    - name: Build for macOS AMD64
+      run: |
+        GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-darwin-amd64 .
+        
+    - name: Build for macOS ARM64
+      run: |
+        GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy-server-darwin-arm64 .
+        
+    - name: Create release archive
+      run: |
+        mkdir -p release
+        cp proxy-server-arm64 release/
+        cp proxy-server-amd64 release/
+        cp proxy-server-windows-amd64.exe release/
+        cp proxy-server-darwin-amd64 release/
+        cp proxy-server-darwin-arm64 release/
+        cp README.md release/
+        cp .env release/
+        
+        cd release
+        tar -czf EZ-Encrypt-Middleware-linux-arm64.tar.gz proxy-server-arm64 README.md .env
+        tar -czf EZ-Encrypt-Middleware-linux-amd64.tar.gz proxy-server-amd64 README.md .env
+        zip EZ-Encrypt-Middleware-windows-amd64.zip proxy-server-windows-amd64.exe README.md .env
+        tar -czf EZ-Encrypt-Middleware-darwin-amd64.tar.gz proxy-server-darwin-amd64 README.md .env
+        tar -czf EZ-Encrypt-Middleware-darwin-arm64.tar.gz proxy-server-darwin-arm64 README.md .env
+        
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-binaries
+        path: release/
+        
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/EZ-Encrypt-Middleware-linux-arm64.tar.gz
+          release/EZ-Encrypt-Middleware-linux-amd64.tar.gz
+          release/EZ-Encrypt-Middleware-windows-amd64.zip
+          release/EZ-Encrypt-Middleware-darwin-amd64.tar.gz
+          release/EZ-Encrypt-Middleware-darwin-arm64.tar.gz
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
