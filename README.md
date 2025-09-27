@@ -145,16 +145,17 @@ go run main.go
   - `all`: 构建所有架构（ARM64 + AMD64）
   - `arm64`: 只构建ARM64架构（Linux ARM64, macOS ARM64）
   - `amd64`: 只构建AMD64架构（Linux AMD64, Windows AMD64, macOS AMD64）
-- **PORT**: 服务器监听端口（默认: 3000）
 - **BACKEND_API_URL**: 后端API地址（必填）
+- **AES_KEY**: AES加密密钥，16位16进制（必填）
+- **PORT**: 服务器监听端口（默认: 3000）
 - **PATH_PREFIX**: 路径前缀（默认: /ez/ez）
 - **CORS_ORIGIN**: CORS源（默认: *）
 - **ALLOWED_ORIGINS**: 允许的来源（默认: *）
 - **REQUEST_TIMEOUT**: 请求超时毫秒数（默认: 30000）
 - **ENABLE_LOGGING**: 是否启用日志（默认: false）
 - **DEBUG_MODE**: 是否启用调试模式（默认: false）
-- **ALLOWED_PAYMENT_NOTIFY_PATHS**: 支付回调免验证路径（默认: 空）
-- **AES_KEY**: AES加密密钥，16位16进制（必填）
+
+> **注意**: `ALLOWED_PAYMENT_NOTIFY_PATHS` 参数已移除，如需配置请使用GitHub Secrets。
 
 #### 方式2: 使用GitHub Secrets设置默认值
 

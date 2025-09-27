@@ -15,14 +15,18 @@ on:
         - 'all'
         - 'arm64'
         - 'amd64'
+      BACKEND_API_URL:
+        description: '后端API地址'
+        required: true
+        type: string
+      AES_KEY:
+        description: 'AES加密密钥(16位16进制)'
+        required: true
+        type: string
       PORT:
         description: '服务器监听端口'
         required: false
         default: '3000'
-        type: string
-      BACKEND_API_URL:
-        description: '后端API地址'
-        required: true
         type: string
       PATH_PREFIX:
         description: '路径前缀'
@@ -60,15 +64,6 @@ on:
         options:
         - 'true'
         - 'false'
-      ALLOWED_PAYMENT_NOTIFY_PATHS:
-        description: '支付回调免验证路径'
-        required: false
-        default: ''
-        type: string
-      AES_KEY:
-        description: 'AES加密密钥(16位16进制)'
-        required: true
-        type: string
 
 jobs:
   build:
@@ -84,7 +79,7 @@ jobs:
       REQUEST_TIMEOUT: ${{ github.event.inputs.REQUEST_TIMEOUT || secrets.REQUEST_TIMEOUT || '30000' }}
       ENABLE_LOGGING: ${{ github.event.inputs.ENABLE_LOGGING || secrets.ENABLE_LOGGING || 'false' }}
       DEBUG_MODE: ${{ github.event.inputs.DEBUG_MODE || secrets.DEBUG_MODE || 'false' }}
-      ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ github.event.inputs.ALLOWED_PAYMENT_NOTIFY_PATHS || secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
+      ALLOWED_PAYMENT_NOTIFY_PATHS: ${{ secrets.ALLOWED_PAYMENT_NOTIFY_PATHS || '' }}
       AES_KEY: ${{ github.event.inputs.AES_KEY || secrets.AES_KEY || '4c6f8e5f9467dc71' }}
     
     steps:
